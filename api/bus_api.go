@@ -94,9 +94,15 @@ func main() {
 		log.Fatalf("API 호출 실패: %v", err)
 	}
 
-	// 결과 출력
+	// 버스 도착 정보 출력
+	fmt.Printf("1번째 버스 도착 정보\n")
 	for _, bus := range result.Body.BusArrivalList {
 		fmt.Printf("노선 ID: %s, 도착 예상 시간: %s분, 차량 번호: %s, 빈자리: %s\n",
 			bus.RouteID, bus.PredictTime1, bus.PlateNo1, bus.RemainSeatCnt1)
+	}
+	fmt.Printf("\n2번째 버스 도착 정보\n")
+	for _, bus := range result.Body.BusArrivalList {
+		fmt.Printf("노선 ID: %s, 도착 예상 시간: %s분, 차량 번호: %s, 빈자리: %s\n",
+			bus.RouteID, bus.PredictTime2, bus.PlateNo2, bus.RemainSeatCnt2)
 	}
 }
