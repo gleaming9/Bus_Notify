@@ -24,11 +24,8 @@ func PrintBusInfo(stationID string) {
 			log.Printf("노선 ID %s의 추가 정보를 가져오는 데 실패했습니다: %v\n", bus.RouteID, err)
 			continue
 		}
-
-		fmt.Printf("%s", routeInfo)
-
 		fmt.Printf("노선 이름: %s, 도착 예상 시간: %s분, 차량 번호: %s, 빈자리: %s\n",
-			routeInfo.Response.MsgBody.BusRouteInfoItem.RouteName,
+			routeInfo.MsgBody.BusRouteInfoItem.RouteName,
 			bus.PredictTime1,
 			bus.PlateNo1,
 			bus.RemainSeatCnt1,
@@ -45,7 +42,7 @@ func PrintBusInfo(stationID string) {
 		}
 
 		fmt.Printf("노선 이름: %s, 도착 예상 시간: %s분, 차량 번호: %s, 빈자리: %s\n",
-			routeInfo.Response.MsgBody.BusRouteInfoItem.RouteName,
+			routeInfo.MsgBody.BusRouteInfoItem.RouteName,
 			bus.PredictTime2,
 			bus.PlateNo2,
 			bus.RemainSeatCnt2,

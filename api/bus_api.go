@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -60,7 +60,7 @@ func GetBusArrivalInfo(serviceKey, stationID string) (*BusArrivalListResponse, e
 	}
 
 	// 응답 본문 읽기
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("응답 본문 읽기 실패: %v", err)
 	}
@@ -80,40 +80,39 @@ func GetBusArrivalInfo(serviceKey, stationID string) (*BusArrivalListResponse, e
 }
 
 type BusRouteInfo struct {
-	Response struct {
-		MsgHeader struct {
-			QueryTime     string `xml:"queryTime"`
-			ResultCode    string `xml:"resultCode"`
-			ResultMessage string `xml:"resultMessage"`
-		} `xml:"msgHeader"`
-		MsgBody struct {
-			BusRouteInfoItem struct {
-				CompanyID        string `xml:"companyId"`
-				CompanyName      string `xml:"companyName"`
-				CompanyTel       string `xml:"companyTel"`
-				DistrictCd       string `xml:"districtCd"`
-				DownFirstTime    string `xml:"downFirstTime"`
-				DownLastTime     string `xml:"downLastTime"`
-				EndStationID     string `xml:"endStationId"`
-				EndStationName   string `xml:"endStationName"`
-				PeekAlloc        string `xml:"peekAlloc"`
-				RegionName       string `xml:"regionName"`
-				RouteID          string `xml:"routeId"`
-				RouteName        string `xml:"routeName"`
-				RouteTypeCd      string `xml:"routeTypeCd"`
-				RouteTypeName    string `xml:"routeTypeName"`
-				StartMobileNo    string `xml:"startMobileNo"`
-				StartStationID   string `xml:"startStationId"`
-				StartStationName string `xml:"startStationName"`
-				UpFirstTime      string `xml:"upFirstTime"`
-				UpLastTime       string `xml:"upLastTime"`
-				NPeekAlloc       string `xml:"nPeekAlloc"`
-			} `xml:"busRouteInfoItem"`
-		} `xml:"msgBody"`
-	} `xml:"response"`
+	XMLName   xml.Name `xml:"response"`
+	MsgHeader struct {
+		QueryTime     string `xml:"queryTime"`
+		ResultCode    string `xml:"resultCode"`
+		ResultMessage string `xml:"resultMessage"`
+	} `xml:"msgHeader"`
+	MsgBody struct {
+		BusRouteInfoItem struct {
+			CompanyID        string `xml:"companyId"`
+			CompanyName      string `xml:"companyName"`
+			CompanyTel       string `xml:"companyTel"`
+			DistrictCd       string `xml:"districtCd"`
+			DownFirstTime    string `xml:"downFirstTime"`
+			DownLastTime     string `xml:"downLastTime"`
+			EndStationID     string `xml:"endStationId"`
+			EndStationName   string `xml:"endStationName"`
+			PeekAlloc        string `xml:"peekAlloc"`
+			RegionName       string `xml:"regionName"`
+			RouteID          string `xml:"routeId"`
+			RouteName        string `xml:"routeName"`
+			RouteTypeCd      string `xml:"routeTypeCd"`
+			RouteTypeName    string `xml:"routeTypeName"`
+			StartMobileNo    string `xml:"startMobileNo"`
+			StartStationID   string `xml:"startStationId"`
+			StartStationName string `xml:"startStationName"`
+			UpFirstTime      string `xml:"upFirstTime"`
+			UpLastTime       string `xml:"upLastTime"`
+			NPeekAlloc       string `xml:"nPeekAlloc"`
+		} `xml:"busRouteInfoItem"`
+	} `xml:"msgBody"`
 }
 
-// GetBusRouteInfo는 노선 ID를 사용하여 노선 정보를 가져오는 함수입니다.
+// GetBusRouteInfo 는 노선 ID를 사용하여 노선 정보를 가져오는 함수입니다.
 func GetBusRouteInfo(serviceKey, routeID string) (*BusRouteInfo, error) {
 	baseURL := "http://apis.data.go.kr/6410000/busrouteservice/getBusRouteInfoItem"
 	reqURL := fmt.Sprintf("%s?serviceKey=%s&routeId=%s", baseURL, serviceKey, routeID)
@@ -128,7 +127,7 @@ func GetBusRouteInfo(serviceKey, routeID string) (*BusRouteInfo, error) {
 		return nil, fmt.Errorf("API 응답 오류: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("응답 읽기 실패: %w", err)
 	}
