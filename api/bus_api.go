@@ -78,3 +78,65 @@ func GetBusArrivalInfo(serviceKey, stationID string) (*BusArrivalListResponse, e
 
 	return &response, nil
 }
+
+type BusRouteInfo struct {
+	Response struct {
+		MsgHeader struct {
+			QueryTime     string `xml:"queryTime"`
+			ResultCode    string `xml:"resultCode"`
+			ResultMessage string `xml:"resultMessage"`
+		} `xml:"msgHeader"`
+		MsgBody struct {
+			BusRouteInfoItem struct {
+				CompanyID        string `xml:"companyId"`
+				CompanyName      string `xml:"companyName"`
+				CompanyTel       string `xml:"companyTel"`
+				DistrictCd       string `xml:"districtCd"`
+				DownFirstTime    string `xml:"downFirstTime"`
+				DownLastTime     string `xml:"downLastTime"`
+				EndStationID     string `xml:"endStationId"`
+				EndStationName   string `xml:"endStationName"`
+				PeekAlloc        string `xml:"peekAlloc"`
+				RegionName       string `xml:"regionName"`
+				RouteID          string `xml:"routeId"`
+				RouteName        string `xml:"routeName"`
+				RouteTypeCd      string `xml:"routeTypeCd"`
+				RouteTypeName    string `xml:"routeTypeName"`
+				StartMobileNo    string `xml:"startMobileNo"`
+				StartStationID   string `xml:"startStationId"`
+				StartStationName string `xml:"startStationName"`
+				UpFirstTime      string `xml:"upFirstTime"`
+				UpLastTime       string `xml:"upLastTime"`
+				NPeekAlloc       string `xml:"nPeekAlloc"`
+			} `xml:"busRouteInfoItem"`
+		} `xml:"msgBody"`
+	} `xml:"response"`
+}
+
+// GetBusRouteInfo는 노선 ID를 사용하여 노선 정보를 가져오는 함수입니다.
+func GetBusRouteInfo(serviceKey, routeID string) (*BusRouteInfo, error) {
+	baseURL := "http://apis.data.go.kr/6410000/busrouteservice/getBusRouteInfoItem"
+	reqURL := fmt.Sprintf("%s?serviceKey=%s&routeId=%s", baseURL, serviceKey, routeID)
+
+	resp, err := http.Get(reqURL)
+	if err != nil {
+		return nil, fmt.Errorf("API 요청 실패: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API 응답 오류: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("응답 읽기 실패: %w", err)
+	}
+
+	var info BusRouteInfo
+	if err := xml.Unmarshal(body, &info); err != nil {
+		return nil, fmt.Errorf("XML 파싱 실패: %w", err)
+	}
+
+	return &info, nil
+}
