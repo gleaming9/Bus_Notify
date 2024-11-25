@@ -28,8 +28,8 @@ func sendEmail(to, subject, body string) {
 	fmt.Println("이메일 전송 성공!")
 }
 
-// RabbitMQ 소비자 함수
-func consumeFromRabbitMQ() {
+// RabbitMQ 소비자 함수 (내보내기 함수)
+func ConsumeFromRabbitMQ() {
 	// RabbitMQ 연결
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	if err != nil {
@@ -80,8 +80,4 @@ func consumeFromRabbitMQ() {
 		// 메시지 내용을 이메일로 전송
 		sendEmail("yoonaji@khu.ac.kr", "버스 알림 서비스", string(message.Body))
 	}
-}
-
-func main() {
-	consumeFromRabbitMQ()
 }
