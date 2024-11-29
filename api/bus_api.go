@@ -4,11 +4,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
-	"net/url"
 )
-
-const baseURL = "http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList"
 
 // API 응답 구조체 정의
 type BusArrivalListResponse struct {
@@ -40,12 +38,10 @@ type BusArrivalListResponse struct {
 
 // GetBusArrivalInfo : 정류소 ID를 기반으로 버스 도착 정보를 가져오는 함수
 func GetBusArrivalInfo(serviceKey, stationID string) (*BusArrivalListResponse, error) {
-	// URL 구성
-	params := url.Values{}
-	params.Add("stationId", stationID)
-	fullURL := fmt.Sprintf("%s?serviceKey=%s&%s", baseURL, serviceKey, params.Encode())
+	const baseURL = "http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList"
+	fullURL := fmt.Sprintf("%s?serviceKey=%s&stationId=%s", baseURL, serviceKey, stationID)
 
-	//log.Println("Request URL:", fullURL)
+	log.Println("Request URL:", fullURL)
 
 	// HTTP GET 요청
 	resp, err := http.Get(fullURL)

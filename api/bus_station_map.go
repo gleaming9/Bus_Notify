@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/csv"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -12,7 +13,7 @@ var StationMap map[string]string
 // LoadStationData: CSV 파일에서 정류소 데이터를 로드하여 StationMap을 초기화
 func LoadStationData() error {
 	// CSV 파일 열기
-	filePath := "bus_stations.csv"
+	filePath := "./bus_stations.csv"
 	file, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("CSV 파일 열기 실패: %v", err)
@@ -40,6 +41,7 @@ func LoadStationData() error {
 
 		StationMap[stationName] = stationID
 	}
+	log.Println(StationMap["경희대정문"])
 	return nil
 }
 

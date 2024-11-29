@@ -4,7 +4,49 @@ import (
 	"fmt"
 	"github.com/gleaming9/Bus_Notify/api"
 	"log"
+	"os"
 )
+
+// BusArrival 구조체: 버스 도착 정보를 표현
+type BusArrival struct {
+	BusNumber         string `json:"busNumber"`
+	FirstArrivalTime  string `json:"firstarrivalTime"`
+	SecondArrivalTime string `json:"secondarrivalTime"`
+}
+
+// GetBusInfo 함수는 정류소 ID를 기반으로 첫 번째 버스 도착 정보를 반환합니다.
+func GetBusInfo(stationID string) ([]BusArrival, error) {
+	// 환경 변수에서 서비스 키 가져오기
+	serviceKey := os.Getenv("SERVICE_KEY")
+
+	// 정류소 ID를 사용하여 버스 도착 정보를 가져옵니다.
+	arrivalResult, err := api.GetBusArrivalInfo(serviceKey, stationID)
+	if err != nil {
+		log.Printf("API 호출 실패: %v", err)
+		return nil, err
+	}
+
+	var busArrivals []BusArrival
+
+	// 첫 번째 버스 도착 정보만 처리
+	for _, bus := range arrivalResult.Body.BusArrivalList {
+		// 버스 노선 정보 가져오기
+		routeInfo, err := api.GetBusRouteInfo(serviceKey, bus.RouteID)
+		if err != nil {
+			log.Printf("노선 정보 조회 실패 (RouteID: %s): %v", bus.RouteID, err)
+			continue
+		}
+
+		// 첫 번째 도착 정보를 추가
+		busArrivals = append(busArrivals, BusArrival{
+			BusNumber:         routeInfo.MsgBody.BusRouteInfoItem.RouteName,
+			FirstArrivalTime:  bus.PredictTime1,
+			SecondArrivalTime: bus.PredictTime2,
+		})
+	}
+
+	return busArrivals, nil
+}
 
 // PrintBusInfo는 정류소 ID를 기반으로 버스 도착 정보를 출력하는 함수입니다.
 func PrintBusInfo(stationID string) {

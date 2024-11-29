@@ -1,0 +1,26 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # AMQP 포트
+      - "15672:15672" # RabbitMQ 관리 콘솔 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      TZ: Asia/Seoul
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bus_notify
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+    ports:
+      - "9090:9090"   # 애플리케이션 서버 포트
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      SERVICE_KEY: FeGUV3k8vqkcTd05EuMbi%2F0kjfLT7YbRP2xwHUxPqrZyBVJGfVA5lfvyIhqOKL1%2FYU5tbctcadarl5Jj3Ym4vg%3D%3D
+      Tz: Asia/Seoul

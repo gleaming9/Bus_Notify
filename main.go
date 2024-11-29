@@ -1,32 +1,39 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gleaming9/Bus_Notify/api"
-	"github.com/gleaming9/Bus_Notify/outputs"
+	"github.com/gleaming9/Bus_Notify/consume"
+	"github.com/gleaming9/Bus_Notify/routes"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	//정류소 데이터 초기화
-	err := api.LoadStationData()
-	if err != nil {
-		log.Fatalf("정류소 데이터 로드 실패: %v", err)
-	}
+	api.LoadStationData()
 
-	for { // 시작 부분
-		stationName := ""
-		fmt.Printf("정류소명을 입력하세요: ")
-		fmt.Scanf("%s", &stationName)
+	// RabbitMQ 서버 실행
+	go func() {
+		log.Println("RabbitMQ 서버 실행 중...")
+		consume.ConsumeFromRabbitMQ()
+	}()
 
-		stationID, err := api.GetStationID(stationName) // 정류소명을 입력받아 정류소 ID 출력
-		if err != nil {
-			fmt.Printf("%v\n", err)
-			continue
-		}
-		//fmt.Printf("정류소명 '%s'의 ID는 '%s'입니다.\n", stationName, stationID)
+	// 라우터 초기화
+	router := routes.InitRoutes()
 
-		outputs.PrintBusInfo(stationID) // 버스 도착 정보 출력
-		fmt.Println()
+	// 서버 종료 신호 처리 (Graceful Shutdown)
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+		<-sig
+		log.Println("서버 종료 신호 수신, 종료 중...")
+		os.Exit(0)
+	}()
+
+	// 서버 실행
+	log.Println("서버가 9090 포트에서 실행 중입니다...")
+	if err := router.Run(":9090"); err != nil {
+		log.Fatalf("서버 실행 실패: %v", err)
 	}
 }
