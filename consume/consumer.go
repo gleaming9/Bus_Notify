@@ -2,6 +2,7 @@ package consume
 
 import (
 	"fmt"
+	"github.com/gleaming9/Bus_Notify/model"
 	"github.com/goccy/go-json"
 	"log"
 	"net/smtp"
@@ -10,22 +11,15 @@ import (
 	"github.com/streadway/amqp"
 )
 
-// AlertMessage 구조체: RabbitMQ에서 수신할 메시지의 구조
-type AlertMessage struct {
-	Email   string `json:"email"`   // 수신자 이메일
-	Subject string `json:"subject"` // 이메일 제목
-	Body    string `json:"body"`    // 이메일 내용
-}
-
 // 이메일 전송 함수
 func sendEmail(to, subject, body string) error {
 	from := "mathasdf0@gmail.com"
-	password := "auej ihcc naxw lsao"
+	password := "vxrq llox tohy brca"
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 
 	// 이메일 메시지 작성
-	message := fmt.Sprintf("Subject: %s\n\n%s", subject, body)
+	message := fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body)
 
 	// SMTP 연결 및 이메일 전송
 	auth := smtp.PlainAuth("", from, password, smtpHost)
@@ -92,7 +86,7 @@ func ConsumeFromRabbitMQ() {
 		log.Printf("메시지 수신: %s", message.Body)
 
 		// 메시지를 AlertMessage 구조체로 디코딩
-		var alert AlertMessage
+		var alert model.AlertMessage
 		if err := json.Unmarshal(message.Body, &alert); err != nil {
 			log.Printf("메시지 디코딩 실패: %v", err)
 			continue

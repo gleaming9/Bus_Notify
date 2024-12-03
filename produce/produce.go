@@ -1,20 +1,30 @@
 package produce
 
 import (
-	"github.com/streadway/amqp"
+	"encoding/json"
 	"log"
 	"os"
+
+	"github.com/gleaming9/Bus_Notify/model"
+	"github.com/streadway/amqp"
 )
 
-// RabbitMQ 메시지 발행 함수
-func PublishToRabbitMQ(queueName string, message string) error {
+func PublishToRabbitMQ(queueName string, message model.AlertMessage) error {
+	log.Printf("RabbitMQ 연결 준비, 큐 이름: %s", queueName)
+
+	jsonMessage, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("메시지 직렬화 실패: %v", err)
+		return err
+	}
+
 	// RabbitMQ 연결 URL
 	rabbitMQURL := os.Getenv("RABBITMQ_URL")
 	if rabbitMQURL == "" {
 		rabbitMQURL = "amqp://guest:guest@rabbitmq:5672/" // 기본값 설정
 	}
 
-	// RabbitMQ 연결 설정
+	// RabbitMQ 연결
 	conn, err := amqp.Dial(rabbitMQURL)
 	if err != nil {
 		log.Printf("RabbitMQ 연결 실패: %v", err)
@@ -22,7 +32,6 @@ func PublishToRabbitMQ(queueName string, message string) error {
 	}
 	defer conn.Close()
 
-	// 채널 생성
 	channel, err := conn.Channel()
 	if err != nil {
 		log.Printf("RabbitMQ 채널 생성 실패: %v", err)
@@ -30,36 +39,36 @@ func PublishToRabbitMQ(queueName string, message string) error {
 	}
 	defer channel.Close()
 
-	// 큐 선언
 	_, err = channel.QueueDeclare(
-		queueName, // 큐 이름
-		false,     // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+		queueName,
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
-		log.Printf("큐 선언 실패: %v", err)
+		log.Printf("RabbitMQ 큐 선언 실패: %v", err)
 		return err
 	}
 
-	// 메시지 발행
+	log.Printf("RabbitMQ 메시지 발행: %s", message)
+
 	err = channel.Publish(
-		"",        // exchange
-		queueName, // routing key
-		false,     // mandatory
-		false,     // immediate
+		"",
+		queueName,
+		false,
+		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(message),
+			ContentType: "application/json",
+			Body:        jsonMessage,
 		},
 	)
 	if err != nil {
-		log.Printf("메시지 발행 실패: %v", err)
+		log.Printf("RabbitMQ 메시지 발행 실패: %v", err)
 		return err
 	}
 
-	log.Printf("메시지 발행 성공: %s", message)
+	log.Printf("RabbitMQ 메시지 발행 성공: %s", string(jsonMessage))
 	return nil
 }

@@ -35,7 +35,7 @@ func StartAlertService(request *model.AlertRequest) error {
 			}
 
 			// 알림 조건 체크 및 RabbitMQ 메시지 발행
-			checkAndSendAlerts(arrivalInfo, stationName, &alertSent)
+			checkAndSendAlerts(arrivalInfo, stationName, request.Email, &alertSent)
 
 			// 모든 알림이 전송되면 종료
 			if alertSent[0] && alertSent[1] && alertSent[2] {
@@ -50,7 +50,7 @@ func StartAlertService(request *model.AlertRequest) error {
 	return nil
 }
 
-func checkAndSendAlerts(arrivalInfo *api.BusArrivalListResponse, stationName string, alertSent *[3]bool) {
+func checkAndSendAlerts(arrivalInfo *api.BusArrivalListResponse, stationName, email string, alertSent *[3]bool) {
 	// 알림 조건 (15분, 10분, 5분 남았을 때 알림 전송)
 	thresholds := []int{15, 10, 5}
 
@@ -66,8 +66,8 @@ func checkAndSendAlerts(arrivalInfo *api.BusArrivalListResponse, stationName str
 	for i, threshold := range thresholds {
 		// 해당 조건의 알림이 아직 전송되지 않았고, 남은 시간이 threshold 이하일 경우
 		if !alertSent[i] && predictTime <= threshold {
-			// 메시지 작성
-			message := buildAlertMessage(stationName, firstArrival.PlateNo1, threshold)
+			// 메시지 생성 (AlertMessage 구조체)
+			message := buildAlertMessage(email, stationName, firstArrival.PlateNo1, threshold)
 
 			// RabbitMQ로 메시지 전송
 			err := produce.PublishToRabbitMQ("bus_alerts", message)
@@ -78,11 +78,18 @@ func checkAndSendAlerts(arrivalInfo *api.BusArrivalListResponse, stationName str
 
 			// 알림 상태 업데이트
 			alertSent[i] = true
-			log.Printf("알림 전송 완료: %s", message)
+			log.Printf("알림 전송 완료: %v", message)
 		}
 	}
 }
 
-func buildAlertMessage(stationName, busNumber string, timeLeft int) string {
-	return fmt.Sprintf("%s 정류소에서 %s 버스가 %d분 후 도착합니다.", stationName, busNumber, timeLeft)
+// buildAlertMessage 함수 수정: AlertMessage 구조체 반환
+func buildAlertMessage(email, stationName, busNumber string, timeLeft int) model.AlertMessage {
+	subject := fmt.Sprintf("%s 정류소에서 버스 알림", stationName)
+	body := fmt.Sprintf("%s 정류소에서 %s 버스가 %d분 후 도착합니다.", stationName, busNumber, timeLeft)
+	return model.AlertMessage{
+		Email:   email,
+		Subject: subject,
+		Body:    body,
+	}
 }
