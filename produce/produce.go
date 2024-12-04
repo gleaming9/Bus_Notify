@@ -9,7 +9,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func PublishToRabbitMQ(queueName string, message model.AlertMessage) error {
+func PublishToRabbitMQ(queueName string, message model.AlertRequest) error {
 	log.Printf("RabbitMQ 연결 준비, 큐 이름: %s", queueName)
 
 	jsonMessage, err := json.Marshal(message)

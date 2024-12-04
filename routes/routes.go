@@ -20,6 +20,8 @@ func InitRoutes() *gin.Engine {
 
 	// Endpoint to get bus information
 	router.GET("/bus-info", handlers.GetBusInfoHandler)
+
+	// Endpoint to receive alert requests
 	router.POST("/alert", handlers.AlertHandler)
 
 	return router

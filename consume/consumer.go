@@ -1,37 +1,14 @@
 package consume
 
 import (
-	"fmt"
 	"github.com/gleaming9/Bus_Notify/model"
+	"github.com/gleaming9/Bus_Notify/service"
 	"github.com/goccy/go-json"
 	"log"
-	"net/smtp"
 	"os"
 
 	"github.com/streadway/amqp"
 )
-
-// 이메일 전송 함수
-func sendEmail(to, subject, body string) error {
-	from := "mathasdf0@gmail.com"
-	password := "vxrq llox tohy brca"
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
-
-	// 이메일 메시지 작성
-	message := fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body)
-
-	// SMTP 연결 및 이메일 전송
-	auth := smtp.PlainAuth("", from, password, smtpHost)
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, []string{to}, []byte(message))
-	if err != nil {
-		log.Fatalf("이메일 전송 실패: %v", err)
-		return err
-	}
-
-	fmt.Println("이메일 전송 성공!")
-	return nil
-}
 
 // RabbitMQ 소비자 함수 (내보내기 함수)
 func ConsumeFromRabbitMQ() {
@@ -86,16 +63,12 @@ func ConsumeFromRabbitMQ() {
 		log.Printf("메시지 수신: %s", message.Body)
 
 		// 메시지를 AlertMessage 구조체로 디코딩
-		var alert model.AlertMessage
-		if err := json.Unmarshal(message.Body, &alert); err != nil {
+		var req model.AlertRequest
+		if err := json.Unmarshal(message.Body, &req); err != nil {
 			log.Printf("메시지 디코딩 실패: %v", err)
 			continue
 		}
 
-		// 이메일 전송
-		if err := sendEmail(alert.Email, alert.Subject, alert.Body); err != nil {
-			log.Printf("이메일 전송 실패: %v", err)
-			continue
-		}
+		go service.MonitorBusArrival(req)
 	}
 }

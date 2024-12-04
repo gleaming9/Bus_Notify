@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gleaming9/Bus_Notify/model"
-	"github.com/gleaming9/Bus_Notify/service"
+	"github.com/gleaming9/Bus_Notify/produce"
 	"net/http"
 	"time"
 )
@@ -57,9 +57,10 @@ func AlertHandler(c *gin.Context) {
 		return
 	}
 
-	//service 호출
-	if err := service.StartAlertService(&req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "알림 요청을 처리하는 중 오류가 발생했습니다"})
+	// RabbitMQ로 메시지 발행
+	err = produce.PublishToRabbitMQ("bus_alerts", req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "RabbitMQ 메시지 발행 실패", "details": err.Error()})
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
 // API 응답 구조체 정의
@@ -37,9 +38,9 @@ type BusArrivalListResponse struct {
 }
 
 // GetBusArrivalInfo : 정류소 ID를 기반으로 버스 도착 정보를 가져오는 함수
-func GetBusArrivalInfo(serviceKey, stationID string) (*BusArrivalListResponse, error) {
+func GetBusArrivalInfo(stationID string) (*BusArrivalListResponse, error) {
 	const baseURL = "http://apis.data.go.kr/6410000/busarrivalservice/getBusArrivalList"
-	fullURL := fmt.Sprintf("%s?serviceKey=%s&stationId=%s", baseURL, serviceKey, stationID)
+	fullURL := fmt.Sprintf("%s?serviceKey=%s&stationId=%s", baseURL, os.Getenv("SERVICE_KEY"), stationID)
 
 	log.Println("Request URL:", fullURL)
 
@@ -109,9 +110,9 @@ type BusRouteInfo struct {
 }
 
 // GetBusRouteInfo 는 노선 ID를 사용하여 노선 정보를 가져오는 함수입니다.
-func GetBusRouteInfo(serviceKey, routeID string) (*BusRouteInfo, error) {
+func GetBusRouteInfo(routeID string) (*BusRouteInfo, error) {
 	baseURL := "http://apis.data.go.kr/6410000/busrouteservice/getBusRouteInfoItem"
-	reqURL := fmt.Sprintf("%s?serviceKey=%s&routeId=%s", baseURL, serviceKey, routeID)
+	reqURL := fmt.Sprintf("%s?serviceKey=%s&routeId=%s", baseURL, os.Getenv("SERVICE_KEY"), routeID)
 
 	resp, err := http.Get(reqURL)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gleaming9/Bus_Notify/api"
 	"log"
-	"os"
 )
 
 // BusArrival 구조체: 버스 도착 정보를 표현
@@ -16,11 +15,8 @@ type BusArrival struct {
 
 // GetBusInfo 함수는 정류소 ID를 기반으로 첫 번째 버스 도착 정보를 반환합니다.
 func GetBusInfo(stationID string) ([]BusArrival, error) {
-	// 환경 변수에서 서비스 키 가져오기
-	serviceKey := os.Getenv("SERVICE_KEY")
-
 	// 정류소 ID를 사용하여 버스 도착 정보를 가져옵니다.
-	arrivalResult, err := api.GetBusArrivalInfo(serviceKey, stationID)
+	arrivalResult, err := api.GetBusArrivalInfo(stationID)
 	if err != nil {
 		log.Printf("API 호출 실패: %v", err)
 		return nil, err
@@ -31,7 +27,7 @@ func GetBusInfo(stationID string) ([]BusArrival, error) {
 	// 첫 번째 버스 도착 정보만 처리
 	for _, bus := range arrivalResult.Body.BusArrivalList {
 		// 버스 노선 정보 가져오기
-		routeInfo, err := api.GetBusRouteInfo(serviceKey, bus.RouteID)
+		routeInfo, err := api.GetBusRouteInfo(bus.RouteID)
 		if err != nil {
 			log.Printf("노선 정보 조회 실패 (RouteID: %s): %v", bus.RouteID, err)
 			continue
@@ -50,10 +46,8 @@ func GetBusInfo(stationID string) ([]BusArrival, error) {
 
 // PrintBusInfo는 정류소 ID를 기반으로 버스 도착 정보를 출력하는 함수입니다.
 func PrintBusInfo(stationID string) {
-	serviceKey := "FeGUV3k8vqkcTd05EuMbi%2F0kjfLT7YbRP2xwHUxPqrZyBVJGfVA5lfvyIhqOKL1%2FYU5tbctcadarl5Jj3Ym4vg%3D%3D" // 발급받은 서비스 키
-
 	// 버스 도착 정보 가져오기
-	result, err := api.GetBusArrivalInfo(serviceKey, stationID)
+	result, err := api.GetBusArrivalInfo(stationID)
 	if err != nil {
 		log.Fatalf("API 호출 실패: %v", err)
 	}
@@ -61,7 +55,7 @@ func PrintBusInfo(stationID string) {
 	// 1번째 버스 도착 정보 출력
 	fmt.Printf("\n1번째 버스 도착 정보\n")
 	for _, bus := range result.Body.BusArrivalList {
-		routeInfo, err := api.GetBusRouteInfo(serviceKey, bus.RouteID) // 노선 ID를 기반으로 버스 노선 정보 가져오기
+		routeInfo, err := api.GetBusRouteInfo(bus.RouteID) // 노선 ID를 기반으로 버스 노선 정보 가져오기
 		if err != nil {
 			log.Printf("노선 ID %s의 추가 정보를 가져오는 데 실패했습니다: %v\n", bus.RouteID, err)
 			continue
@@ -77,7 +71,7 @@ func PrintBusInfo(stationID string) {
 	// 2번째 버스 도착 정보 출력
 	fmt.Printf("\n2번째 버스 도착 정보\n")
 	for _, bus := range result.Body.BusArrivalList {
-		routeInfo, err := api.GetBusRouteInfo(serviceKey, bus.RouteID) // 노선 ID를 기반으로 버스 노선 정보 가져오기
+		routeInfo, err := api.GetBusRouteInfo(bus.RouteID) // 노선 ID를 기반으로 버스 노선 정보 가져오기
 		if err != nil {
 			log.Printf("노선 ID %s의 추가 정보를 가져오는 데 실패했습니다: %v\n", bus.RouteID, err)
 			continue
