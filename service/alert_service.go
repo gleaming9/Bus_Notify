@@ -11,12 +11,6 @@ import (
 	"time"
 )
 
-// BusData 구조체 정의
-type BusData struct {
-	First  string // 버스 이름
-	Second string // 예상 도착 시간
-}
-
 func MonitorBusArrival(req model.AlertRequest) {
 	// 정류소 ID와 버스 도착 정보 조회
 	stationID, err := api.GetStationID(req.StationName)
@@ -33,7 +27,7 @@ func MonitorBusArrival(req model.AlertRequest) {
 			return
 		}
 
-		busData := [20]BusData{}
+		busData := [20]model.BusData{}
 		cnt := 0
 		for _, bus := range arrivalInfo.Body.BusArrivalList {
 			routeInfo, err := api.GetBusRouteInfo(bus.RouteID) // 노선 ID를 기반으로 버스 노선 정보 가져오기
@@ -43,13 +37,13 @@ func MonitorBusArrival(req model.AlertRequest) {
 			}
 
 			if bus.PredictTime1 != "" || bus.PredictTime1 < "30" {
-				busData[cnt] = BusData{
+				busData[cnt] = model.BusData{
 					First:  routeInfo.MsgBody.BusRouteInfoItem.RouteName,
 					Second: bus.PredictTime1,
 				}
 				cnt++
 			} else if bus.PredictTime2 != "" || bus.PredictTime1 < "30" {
-				busData[cnt] = BusData{
+				busData[cnt] = model.BusData{
 					First:  routeInfo.MsgBody.BusRouteInfoItem.RouteName,
 					Second: bus.PredictTime2,
 				}
@@ -59,7 +53,16 @@ func MonitorBusArrival(req model.AlertRequest) {
 
 		routeName, timeleft := checkArrivalCondition(busData[:cnt], req.TargetTime)
 		if routeName == "" && timeleft == 0 {
-			log.Fatalf("check 오류")
+			// 이메일 발송
+
+			subject := fmt.Sprintf("%s 버스 도착 실패 알림", req.StationName)
+			body := fmt.Sprintf("설정하신 시간 이내에 도착하는 버스가 없습니다.")
+			if err := sendEmail(req.Email, subject, body); err != nil {
+				log.Printf("이메일 전송 실패: %v", err)
+				return
+			}
+			log.Printf("이메일 전송 완료: %s", req.Email)
+
 			return
 		} else if routeName == "" && timeleft == 1 {
 			log.Printf("도착 예정 버스가 없습니다.")
@@ -86,7 +89,7 @@ func MonitorBusArrival(req model.AlertRequest) {
 }
 
 // checkArrivalCondition: 특정 조건을 만족하는지 확인
-func checkArrivalCondition(busData []BusData, targetTime string) (string, int) {
+func checkArrivalCondition(busData []model.BusData, targetTime string) (string, int) {
 	now := time.Now()
 	// 현재 시간과 분 추출
 	hours := now.Hour()
@@ -115,16 +118,18 @@ func checkArrivalCondition(busData []BusData, targetTime string) (string, int) {
 			return "", 0
 		}
 		busTime_minutes := nowTime_minutes + b
-		log.Printf("각 버스 시간 : %d\n", busTime_minutes)
+		log.Printf("%s 버스 시간 : %d\n", bus.First, busTime_minutes)
 		// targetTime_minutes보다 작은 값 중 가장 근접한 값 찾기
 		if (busTime_minutes < targetTime_minutes) && (targetTime_minutes-busTime_minutes < targetTime_minutes-closestTime) {
 			closestTime = busTime_minutes
 			closestBus = bus.First
 		}
 	}
-	log.Printf("가장 가까운 버스 시간 : %d\n", closestTime)
-	// 가장 근접한 도착 시간이 15분 이내면 알림
-	if closestTime != 0 && targetTime_minutes-closestTime <= 15 {
+	log.Printf("가장 가까운 버스 %s 시간 : %d\n", closestBus, closestTime)
+	if closestTime == 0 {
+		return "", 0
+		// 가장 근접한 도착 시간이 15분 이내면 알림
+	} else if targetTime_minutes-closestTime <= 15 {
 		return closestBus, targetTime_minutes - closestTime
 	} else {
 		return "", 1

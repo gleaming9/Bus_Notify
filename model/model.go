@@ -15,3 +15,9 @@ type AlertRequest struct {
 	Email       string `json:"email" binding:"required,email"`
 	TargetTime  string `json:"targetTime" binding:"required"` // HH:mm 형식
 }
+
+// BusData 구조체 정의
+type BusData struct {
+	First  string // 버스 이름
+	Second string // 예상 도착 시간
+}
