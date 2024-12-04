@@ -7,8 +7,8 @@
     <img src="https://img.shields.io/badge/Status-Complete-green" alt="Status" />
 </p>
 
-<p align="center">📢 A real-time bus notification service using RabbitMQ and Gin Framework.<br> Designed to provide accurate and timely bus arrival information for Gyeonggi-do bus stops. 🕒</p>
-
+<p align="center"> A real-time bus notification service using RabbitMQ and Gin Framework.<br> Designed to provide accurate and timely bus arrival information for Gyeonggi-do bus stops. </p>
+<!--📢🕒-->
 <hr/>
 
 <h2>📋 Features</h2>
