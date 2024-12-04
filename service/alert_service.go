@@ -59,7 +59,7 @@ func MonitorBusArrival(req model.AlertRequest) {
 
 		routeName, timeleft := checkArrivalCondition(busData[:cnt], req.TargetTime)
 		if routeName == "" && timeleft == 0 {
-			log.Printf("check 오류")
+			log.Fatalf("check 오류")
 			return
 		} else if routeName == "" && timeleft == 1 {
 			log.Printf("도착 예정 버스가 없습니다.")
